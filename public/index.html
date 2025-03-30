@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>User Registration</h1>
+    <input type="text" id="name" placeholder="Enter Name">
+    <input type="email" id="email" placeholder="Enter Email">
+    <input type="password" id="password" placeholder="Enter Password">
+    <button onclick="registerUser()">Register</button>
+
+    <h2>All Users</h2>
+    <button onclick="fetchUsers()">Load Users</button>
+    <table border="1">
+        <thead>
+            <tr><th>ID</th><th>Name</th><th>Email</th><th>Action</th></tr>
+        </thead>
+        <tbody id="userTable"></tbody>
+    </table>
+
+    <script>
+        function registerUser() {
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+            fetch('http://localhost:5000/api/users/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message || "User registered successfully!");
+                fetchUsers(); // Refresh user list
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("An error occurred.");
+            });
+        }
+
+        function fetchUsers() {
+            fetch('http://localhost:5000/api/users/all')
+            .then(response => response.json())
+            .then(users => {
+                let tableBody = document.getElementById("userTable");
+                tableBody.innerHTML = ""; // Clear previous data
+
+                users.forEach(user => {
+                    let row = `<tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><button onclick="deleteUser(${user.id})">Delete</button></td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deleteUser(id) {
+            fetch(`http://localhost:5000/api/users/delete/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchUsers();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+</body>
+</html>
